@@ -160,5 +160,3 @@ extension LoginViewController {
     }
     
 }
-
-print("Hello")
