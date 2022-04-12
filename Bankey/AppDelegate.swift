@@ -11,9 +11,11 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    //var hasOnBoarded = false
     
     let loginViewController = LoginViewController()
     let onboardingContainerViewController = OnboardingContainerViewController()
+    let dummyViewcontroller = DummyViewController()
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]?) -> Bool {
         
@@ -24,10 +26,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //window?.rootViewController = loginViewController
         //loginViewController.delegate = self
         
-        window?.rootViewController = onboardingContainerViewController
+        window?.rootViewController = loginViewController
         
         loginViewController.delegate = self
         onboardingContainerViewController.delegate = self
+        dummyViewcontroller.logoutDelegate = self
+        
     
         
         //window?.rootViewController = LoginViewController()
@@ -41,13 +45,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 extension AppDelegate: LoginViewControllerDelegate {
     func didLogin() {
-        print("Did login")
+        if LocalState.hasOnboarded {
+            setRootValueController(dummyViewcontroller)
+        } else {
+            setRootValueController(onboardingContainerViewController)
+        }
     }
 }
 
 extension AppDelegate: OnboardingContainerViewControllerDelegate {
     func didFinishOnboarding() {
-        print("Did onboarding")
+        LocalState.hasOnboarded = true
+        setRootValueController(dummyViewcontroller)
     }
 }
 
+extension AppDelegate: LogoutDelegate {
+    func didLogout() {
+        setRootValueController(loginViewController)
+    }
+}
+
+extension AppDelegate {
+    func setRootValueController(_ vc: UIViewController, animated: Bool = true) {
+        guard animated, let window = self.window else {
+            self.window?.rootViewController = vc
+            self.window?.makeKeyAndVisible()
+            return
+        }
+        
+        window.rootViewController = vc
+        window.makeKeyAndVisible()
+        UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: nil, completion: nil)
+    }
+}
